@@ -1,6 +1,7 @@
 #########################################################
-# Lipidomics Workflow Part 3: Quantification            #
+# LipidMatch Quant                                      #
 # Author: Jason Cochran                                 #
+# Chemistry/moral support: Jeremy Koelmel               #
 #########################################################
 
 rm( list = ls() )
@@ -50,8 +51,7 @@ GUILauncher <- function() {
   adductIDCol <<- tclVar("22")
   numericDataStart_row <<- tclVar("3")
   sampleGrouping_row <<- tclVar("2")
-  # k <<- tclVar("2")
-  
+
   tt <- tktoplevel()
   tkwm.title(tt,"LipidMatchQuant Settings")
   numValues.entry <- tkentry(tt, textvariable= numValues)
@@ -60,7 +60,6 @@ GUILauncher <- function() {
   rt_tolerance.entry <- tkentry(tt, textvariable= rt_tolerance)
   normalizeByWeights.entry <- tk2checkbutton(tt, text = "Normalize data (e.g. by weight or protein)")
   
-  # k.entry <- tkentry(tt, textvariable = k )
   numAdducts.entry <- tkentry(tt, textvariable= numAdducts)
   sampleStartCol.entry <- tkentry(tt, textvariable  = sampleStartCol)
   sampleEndCol.entry <- tkentry(tt, textvariable = sampleEndCol)
@@ -86,7 +85,6 @@ GUILauncher <- function() {
     adductIDCol <<- as.numeric(tclvalue(adductIDCol))
     numericDataStart_row <<- as.numeric(tclvalue(numericDataStart_row))
     sampleGrouping_row <<- as.numeric(tclvalue(sampleGrouping_row))
-    # k <<- tclvalue(k)
     tclvalue(done) <- 1
     tkdestroy(tt)
   }
@@ -108,10 +106,8 @@ GUILauncher <- function() {
   tkgrid(tklabel(tt, text="Output folder name (created automatically): "), output.entry)
   tkgrid(tklabel(tt,text="m/z Tolerance:"), mz_tolerance.entry)
   tkgrid(tklabel(tt,text="RT Tolerance:"), rt_tolerance.entry)
-  # tkgrid(normalizeByWeights.entry, columnspan=2 )
   tkgrid(tklabel(tt, text=""))
   tkgrid(tklabel(tt,text="Number of Adducts:"), numAdducts.entry)
-  # tkgrid(tklabel(tt,text="Number of Samples:"), numValues.entry)
   tkgrid(tklabel(tt, text="Sample Start Column:"), sampleStartCol.entry)
   tkgrid(tklabel(tt, text="Sample End Column:"), sampleEndCol.entry)
   tkgrid(tklabel(tt, text="m/z Column:"), mzCol.entry)
@@ -150,8 +146,6 @@ for(i in 2:(numericDataStart_row - 1) ) {
   FeatureTable <- FeatureTable[-1,]
 }
 
-# matched <- data.frame(matchClass <- character(nrow(FeatureTable)), matchAdduct <- character(nrow(FeatureTable)), stringsAsFactors = FALSE)
-# colnames(matched) <- c("matchClass", "matchAdduct")
 
 row <- 1
 
@@ -172,14 +166,12 @@ FindStandards = function(selISRow) {
   potentialStandards <- subset(potentialStandards, potentialStandards[,RTCol] >= (as.numeric(selISRow[2]) - rt_tolerance) )
   # Once we have that list... we will then search it multiple times (depending on the # of adducts) using the m/z of each adduct
   for(i in 1:numAdducts) {
-    # browser()
     # If a match is found for an adduct, we will label it in the matches table. If there are multiple, choose the one with the closest RT.
     potentialAdductMatches <- subset(potentialStandards, potentialStandards[,mzCol] <= (as.numeric(as.numeric(selISRow[2+i])) + mz_tolerance) )
     potentialAdductMatches <- subset(potentialAdductMatches, potentialAdductMatches[,mzCol] >= (as.numeric(selISRow[2+i]) - mz_tolerance))
     matchAdduct <- names(selISRow[2+i])
     if( nrow(potentialAdductMatches) >= 2) { # We only need 1 IS... remove all others
       # Reduce the possibilities using the closest RT of the matches to the original IS
-      # avgIntStd <- which( abs( as.numeric(subset_classes$RT)-avgRT) == min(abs( as.numeric(subset_classes$RT)-avgRT)) )
       closestRow <- which( abs( as.numeric(potentialAdductMatches[,RTCol]) - as.numeric(selISRow[2]) ) == min(abs( as.numeric(potentialAdductMatches[,RTCol]) - as.numeric(selISRow[2]) )) )
       potentialAdductMatches <- potentialAdductMatches[closestRow,]
     }
@@ -190,11 +182,9 @@ FindStandards = function(selISRow) {
       matchClass <- selISRow[1]
       currentMatch <- cbind(potentialAdductMatches, matchClass, matchAdduct)
       matches <<- rbind(matches, currentMatch)
-      print("DING")
     } else if( nrow(potentialAdductMatches) == 0) {
       # Do nothing.
     } else {
-      # browser()
       print("Multiple features identified as matches for a single internal standard. Please contact the developers.")
     }
   }
@@ -209,21 +199,18 @@ rm(mz_tolerance, row, rt_tolerance, titles, FindStandards)
 #############################################
 
 # Make a table of just our matched Intd Standards to make quantifying easier
-# matches <- cbind( FeatureTable, matched)
-# matches <- subset(matches, matches$matchClass != "" )
 write.table(matches, file = paste(output ,"standardsFound.csv", sep = "/"), sep = ",", col.names = TRUE, row.names = FALSE)
-
-# Remove all matches from previous step from our FeatureTable data
-# filtered <- cbind( FeatureTable, matched$matchAdduct)
-# filtered <- subset( filtered, filtered$matched == "")
-# filtered <- filtered[, -ncol(filtered)]
 
 # Setup a dataframe to store all the classes we need
 quantClasses <- as.list( strsplit( as.character( InternalStandard$Classes), split = " " ) )
 quantClasses <- sapply( quantClasses , '[', seq(max(sapply(quantClasses, length))))
-quantClasses <- t(quantClasses)
+if(!is.matrix(quantClasses)){
+  quantClasses <- as.matrix(quantClasses)
+} else {
+  quantClasses <- t(quantClasses)
+}
 numQuantClasses <- ncol(quantClasses)
-classes <- cbind.data.frame(InternalStandard[,1:(2+numAdducts)], InternalStandard[,9:length(InternalStandard)], quantClasses )
+classes <- cbind.data.frame(InternalStandard[,1:(2+numAdducts)], InternalStandard[,(numAdducts+3):length(InternalStandard)], quantClasses )
 
 isQuantified <- matrix(data=0, nrow = nrow(FeatureTable), ncol = 1)
 IS_Species <- matrix(data = NA, nrow = nrow(FeatureTable), ncol = 1)
@@ -232,7 +219,6 @@ quantifiedAmounts <- cbind(FeatureTable, isQuantified, IS_Species, IS_Adduct)
 rm(quantClasses, IS_Species, IS_Adduct)
 
 quantifier_actual = function(rawInput, curStandard, curIntStd) {
-  # browser()
   rowNum <- which(quantifiedAmounts[,1] == as.numeric(rawInput[1]) )
   quantifiedAmounts$isQuantified[rowNum] <<- 1
   quantifiedAmounts$IS_Species[rowNum] <<- curIntStd[[1]]
@@ -248,7 +234,6 @@ quantifier_actual = function(rawInput, curStandard, curIntStd) {
 }
 
 quantifier_multi_IS = function(class_sel) {
-  # browser()
   masterClassList <- NULL
   # Select anything with the class we want
   masterClassList <- subset(FeatureTable, FeatureTable[,classIDCol] == class_sel[[1]])
@@ -257,26 +242,24 @@ quantifier_multi_IS = function(class_sel) {
   #         Find all standards which are available for that adduct (check matches table for this data)
   #         For all the standards available make a table of what RT goes with each standard and its respective adduct
   for(i in 1:numAdducts) {
-    # browser()
     curAdduct <- colnames(InternalStandard)[[2+i]]
     curStandards <- matrix(data = NA, nrow = 0, ncol = 2)
     currentFeatureList <- subset(masterClassList, masterClassList[,adductIDCol] == curAdduct)
     noStandardFound <- TRUE
     if( nrow(currentFeatureList) != 0 ) {
       # class_sel[2] gives a list of all standards that we can actually use for this CLASS... now we need to find out what we can use for this adduct
-      for(numIS in 1:length(class_sel[2])) {
+      for(numIS in 1:length(class_sel[[2]])) {
         # For each IS candidate we need to find out if it has the adduct we want is available
-        tempStandards <- subset(matches, matches$matchClass == class_sel[2][[numIS]])
+        tempStandards <- subset(matches, matches$matchClass == class_sel[[2]][[numIS]])
         tempStandards <- subset(tempStandards, tempStandards$matchAdduct == curAdduct )
         if( nrow(tempStandards) == 1 ) {
           temp_insert_row <- matrix(data = NA, nrow = 1, ncol = 2)
-          # temp_insert_row[,1] <- tempStandards$matchClass[[1]]
           temp_insert_row[,1] <- as.character(unlist(tempStandards$matchClass[[1]]))
           temp_insert_row[,2] <- tempStandards[,4]
           curStandards <- rbind(curStandards, temp_insert_row)
           noStandardFound <- FALSE
         } else {
-          print("Error: More than one standard has been detected when checking for adduct availability.")
+          # print("Error: More than one standard has been detected when checking for adduct availability.")
         }
       }
       # Have a list of all standards that quantify this particular adduct and class
@@ -285,13 +268,15 @@ quantifier_multi_IS = function(class_sel) {
       if(nrow(curStandards) != 1 ) {
         curStandards <- curStandards[,order( as.numeric(curStandards[,2]) )]
       }
+      # browser()
       RT_cutoffs <- matrix(data = NA, nrow = 1, ncol = ( nrow(curStandards) + 1) )
       RT_cutoffs[ncol(RT_cutoffs)] = 10000000000000
       RT_cutoffs[1] = 0
       #First we create the RT cutoff table
       if( ncol(RT_cutoffs) > 2) {
         for( RT_value in 1:( nrow(curStandards) - 1 ) ) {
-          RT_cutoffs[1+RT_value] <<- ( as.numeric( curStandards[RT_value,2]  ) + as.numeric( curStandards[RT_value+1,2] ) ) / 2
+          # RT_cutoffs[1+RT_value] <<- ( as.numeric( curStandards[RT_value,2]  ) + as.numeric( curStandards[RT_value+1,2] ) ) / 2
+          RT_cutoffs[1+RT_value] <- ( as.numeric( curStandards[RT_value,2]  ) + as.numeric( curStandards[RT_value+1,2] ) ) / 2
         }
       }
       # Then we quantify
@@ -299,7 +284,6 @@ quantifier_multi_IS = function(class_sel) {
       #   Then we select things that fall within each range and send those things with that standard to be quantified
       if( !noStandardFound ) {
         for(standard in 1:(nrow(curStandards)) ) {
-          # browser()
           # First select our standard from matches
           curStandard <- subset(matches, matches$matchClass == curStandards[standard,1] )
           curStandard <- subset(curStandard, curStandard$matchAdduct == curAdduct)
@@ -308,7 +292,6 @@ quantifier_multi_IS = function(class_sel) {
           # Then we will get all of the features we can quant with this standard
           selected_subset <- subset(currentFeatureList, currentFeatureList[,RTCol] <= RT_cutoffs[standard+1] )
           selected_subset <- subset(selected_subset, selected_subset[,RTCol] >= RT_cutoffs[standard] )
-          #         apply( subsetBlock_sm, 1, quantifier_actual, curStandard = curStandard, curIntStd = curIntStd )
           apply( selected_subset, 1, quantifier_actual, curStandard = curStandard, curIntStd = curIntStd)
         }
       }
@@ -322,8 +305,7 @@ quantifier_multi_IS = function(class_sel) {
 # is iteration number
 class_standards <- data.frame(Class = as.character(), IS_list = I(as.list(as.character())), stringsAsFactors = FALSE )
 
-# for(i in (2 + numAdducts + (sampleEndCol - sampleStartCol + 1) + 1):ncol(classes) )  {
-for(i in (2 + numAdducts + (sampleEndCol - sampleStartCol + 1) + 2):ncol(classes) )  {  
+for(i in (2 + numAdducts + (sampleEndCol - sampleStartCol + 1) + 2):ncol(classes) )  {
   for( j in 1:(nrow(classes)) ) {
     if( !is.na(classes[j,i])) {
       count <- sum(class_standards[,1] == classes[j,i])
@@ -334,7 +316,7 @@ for(i in (2 + numAdducts + (sampleEndCol - sampleStartCol + 1) + 2):ncol(classes
         class_standards <<- rbind(class_standards, temp_new)
       } else { # Standard already accounted for. Add another possible IS for use
         rowNum <- which(class_standards[,1] == classes[j,i])
-        class_standards[[rowNum,2]] <- list(class_standards[rowNum,2], classes[j,1] )
+        class_standards[[rowNum, 2]] <- c( class_standards[rowNum,2][[1]], classes[j,1] )
       } 
     }
   }
@@ -342,9 +324,8 @@ for(i in (2 + numAdducts + (sampleEndCol - sampleStartCol + 1) + 2):ncol(classes
 
 apply( class_standards, 1, quantifier_multi_IS)
 
-# Cleanup the table and output it
 temp_init <- subset(quantifiedAmounts, quantifiedAmounts$isQuantified == 1)
-rm( quantifier, quantifier_actual)
+rm( quantifier_actual)
 
 #############################################
 # Quantify anything that we didn't find a int std for but that we identified
@@ -386,7 +367,6 @@ rm(tempQuantifiers, j, i, tempSubset, tempAdducts, tempRow)
 
 quantifier = function(rawInput, sel_IS, curStandard, score) {
   rowNum <- which(quantifiedAmounts[,1] == as.numeric(rawInput[1]) )
-  # browser()
   quantifiedAmounts$isQuantified[rowNum] <<- score
   quantifiedAmounts$IS_Species[rowNum] <<- sel_IS[[1]]
   quantifiedAmounts$IS_Adduct[rowNum] <<- as.character(unlist(curStandard$matchAdduct))
@@ -394,7 +374,10 @@ quantifier = function(rawInput, sel_IS, curStandard, score) {
   i <- sampleStartCol
   j <- 1
   while(i <= sampleEndCol) {
-    quantifiedAmounts[rowNum, i] <<- ( as.double(sel_IS[3+numAdducts+j-1]) / as.double(curStandard[i]) ) *  as.double(rawInput[i])
+    # quantifiedAmounts[rowNum, i] <<- ( as.double(curIntStd[3+numAdducts+j]) / as.double(curStandard[i]) ) *  as.double(rawInput[i])
+    # Below is old line from this section; above is line from score 1 quantification
+    # quantifiedAmounts[rowNum, i] <<- ( as.double(sel_IS[3+numAdducts+j-1]) / as.double(curStandard[i]) ) *  as.double(rawInput[i])
+    quantifiedAmounts[rowNum, i] <<- ( as.double(sel_IS[3+numAdducts+j]) / as.double(curStandard[i]) ) *  as.double(rawInput[i])
     # For ^ (IS amount / IS Signal ) * Sample signal
     i <- i + 1
     j <- j + 1
@@ -402,7 +385,6 @@ quantifier = function(rawInput, sel_IS, curStandard, score) {
 }
 
 comparator = function(sel_group) {
-  # browser()
   subset_sm <- subset(unQuantified, unQuantified[,classIDCol] == sel_group[1] )
   subset_sm <- subset(subset_sm, subset_sm[,adductIDCol] == sel_group[2] )
   if( nrow(subset_sm) >= 1) {
@@ -413,7 +395,6 @@ comparator = function(sel_group) {
     subset_classes <- classes[ !is.na(classes[,adduct_desired + 2]), ]
     if( nrow(classes[ !is.na(classes[,adduct_desired + 2]), ]) >= 1 ){
       # Now find standard with closest value
-      # avgIntStd <- which( abs( as.numeric(subset_classes$RT)-avgRT) == min(abs( as.numeric(subset_classes$RT)-avgRT)) )
       possibleISSubset <- subset(matches, matches$matchAdduct == sel_group[[2]])
       avgIntStd <- which( abs( as.numeric(possibleISSubset[,RTCol])-avgRT) == min(abs( as.numeric(possibleISSubset[,RTCol])-avgRT)) )
       # if nothing gets selected in the above stage then error out
@@ -425,10 +406,6 @@ comparator = function(sel_group) {
       }
       # Now let's use the standard we know we have to find the standard inside the IS table...
       curStandard <- avgIntStd
-      # curStandard <- which( matches$matchClass == avgIntStd$matchClass  )
-      # curStandard <- matches[curStandard,]
-      # tempStandard <- which(curStandard$matchAdduct == sel_group[[2]])
-      # curStandard <- curStandard[tempStandard,]
       avgIntStd <- which( subset_classes[,1] == curStandard$matchClass)
       avgIntStd <- subset_classes[avgIntStd,]
       
@@ -437,7 +414,6 @@ comparator = function(sel_group) {
         apply(subset_sm, 1, quantifier, sel_IS = avgIntStd, curStandard = curStandard, score = 2 )
       }
     } else {
-     # browser()
       subset_classes <- classes
       avgIntStd <- which( abs( as.numeric(subset_classes$RT)-avgRT) == min(abs( as.numeric(subset_classes$RT)-avgRT)) )
       avgIntStd <- subset_classes[avgIntStd,]
@@ -447,7 +423,6 @@ comparator = function(sel_group) {
       mzAvg <- mean(subset_sm[,mzCol])
       mzAvgFeature <- which( abs( as.numeric(curStandard[,mzCol])-mzAvg) == min(abs( as.numeric(curStandard[,mzCol])-mzAvg)) )
       curStandard <- curStandard[mzAvgFeature,]
-      # browser()
       apply(subset_sm, 1, quantifier, sel_IS = avgIntStd, curStandard = curStandard, score = 3 )
     }
   } else {
@@ -475,4 +450,3 @@ grouping <- quantifiedAmounts[1,]
 quantifiedAmounts <- quantifiedAmounts[-1,]
 
 print("Quantification is complete")
-
