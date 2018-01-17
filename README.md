@@ -2,14 +2,11 @@
 
 Open source solution for quantification of lipids. Can be easily used with LipidMatch software.
 
-=========================================
 Want to report a bug?
 =========================================
 
 Use the issues tab at the top of the page to open a new issue. The developers will respond to your question in a timely manner. If they discover that the issue is a bug for LipidMatch Quant, they will try to issue a patch to fix the problem. Otherwise, they will try to instruct you how to best avoid the error in the future.
 
-
-=========================================
 Want to contribute to our project?
 =========================================
 
