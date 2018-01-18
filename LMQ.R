@@ -1,7 +1,6 @@
 #########################################################
 # LipidMatch Quant                                      #
-# Author: Jason Cochran                                 #
-# Chemistry/moral support: Jeremy Koelmel               #
+# Authors: Jason Cochran, Jeremy Koelmel                #
 #########################################################
 
 rm( list = ls() )
