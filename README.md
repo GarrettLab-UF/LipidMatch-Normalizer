@@ -2,8 +2,9 @@
 
 Open source solution for quantification of lipids. Can be easily used with LipidMatch software.
 
-Want to download the latest version? Click "Releases" then click 'zip' to download the version you want!
+How to download LipidMatchQuant
 =========================================
+Want to download the latest version? Click "Releases" then click 'zip' to download the version you want!
 
 Want to report a bug?
 =========================================
