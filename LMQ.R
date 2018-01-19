@@ -25,23 +25,22 @@ sampleGrouping_row <- NULL
 normalizeByWeights <- NULL
 weights_col <-NULL
 
-if( length(args) !=0 ) {
-  numAdducts <- args[1]
-  numValues <- args[2]
-  rt_tolerance <- args[3]
-  mz_tolerance <- args[4]
-  featureTable_loc <- args[5]
-  intStd_loc <- args[6]
-  output <- args[7]
-  RTCol <- args[8]
-  mzCol <- args[9]
-  sampleStartCol <- args[10]
-  sampleEndCol <- args[11]
-  classIDCol <- args[12]
-  adductIDCol <- args[13]
-  numericDataStart_row <- args[14]
-  sampleGrouping_row <- args[15]
-  normalizeByWeights <- args[16]
+if( length(args) == 1 ) {
+  settings <-  as.matrix(read.csv(args[1], header = TRUE, stringsAsFactors = FALSE))
+  numAdducts <- settings[1,2]
+  rt_tolerance <- settings[2,2]
+  mz_tolerance <- settings[3,2]
+  featureTable_loc <- settings[4,2]
+  intStd_loc <- settings[5,2]
+  output <- settings[6,2]
+  RTCol <- settings[7,2]
+  mzCol <- settings[8,2]
+  sampleStartCol <- settings[9,2]
+  sampleEndCol <- settings[10,2]
+  classIDCol <- settings[11,2]
+  adductIDCol <- settings[12,2]
+  numericDataStart_row <- settings[13,2]
+  sampleGrouping_row <- settings[14,2]
   weights_col <-NULL
   
 } else {
@@ -116,7 +115,7 @@ if( length(args) !=0 ) {
       rt_tolerance <<- as.numeric(tclvalue(rt_tolerance))
       normalizeByWeights <<- as.character(tclvalue(normalizeByWeights))
       numAdducts <<- as.numeric(tclvalue(numAdducts))
-      numValues <<- as.numeric(tclvalue(numValues))
+      # numValues <<- as.numeric(tclvalue(numValues))
       sampleStartCol <<- as.numeric(tclvalue(sampleStartCol))
       sampleEndCol <<- as.numeric(tclvalue(sampleEndCol))
       mzCol <<- as.numeric(tclvalue(mzCol))
