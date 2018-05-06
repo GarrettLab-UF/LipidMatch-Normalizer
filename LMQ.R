@@ -1,18 +1,11 @@
 #########################################################
 # LipidMatch Quant                                      #
-# Author: Jason Cochran                                 #
-# Chemistry/moral support: Jeremy Koelmel               #
+# Authors: Jason Cochran, Jeremy Koelmel                #
 #########################################################
 
 rm( list = ls() )
 
-#### GUI starts here ###############################################################################
-if("tcltk2" %in% rownames(installed.packages()) == FALSE) {install.packages("tcltk2")}
-library(tcltk2)
-
-wd <- tk_choose.dir(default = "", caption = "Select directory")
-setwd(wd)
-done <- tclVar(0)
+args = commandArgs(trailingOnly=TRUE)
 
 numAdducts <- NULL
 numValues <- NULL
@@ -21,7 +14,6 @@ mz_tolerance <- NULL
 featureTable_loc <- NULL
 intStd_loc <- NULL
 output <- NULL
-
 RTCol <- NULL
 mzCol <- NULL
 sampleStartCol <- NULL
@@ -31,101 +23,149 @@ adductIDCol <- NULL
 numericDataStart_row <- NULL
 sampleGrouping_row <- NULL
 normalizeByWeights <- NULL
-
 weights_col <-NULL
 
-GUILauncher <- function() {
+if( length(args) == 1 ) {
+  settings <-  as.matrix(read.csv(args[1], header = TRUE, stringsAsFactors = FALSE))
+  numAdducts <- settings[1,2]
+  rt_tolerance <- settings[2,2]
+  mz_tolerance <- settings[3,2]
+  featureTable_loc <- settings[4,2]
+  intStd_loc <- settings[5,2]
+  output <- settings[6,2]
+  RTCol <- settings[7,2]
+  mzCol <- settings[8,2]
+  sampleStartCol <- settings[9,2]
+  sampleEndCol <- settings[10,2]
+  classIDCol <- settings[11,2]
+  adductIDCol <- settings[12,2]
+  numericDataStart_row <- settings[13,2]
+  sampleGrouping_row <- settings[14,2]
+  weights_col <-NULL
   
-  output <<- tclVar("Default Output Folder")
-  mz_tolerance <<- tclVar(".005")
-  rt_tolerance <<- tclVar(".15")
-  normalizeByWeights <<- tclVar("0")
+} else {
   
-  numAdducts <<- tclVar("5")
-  numValues <<- tclVar("18")
-  sampleStartCol <<- tclVar("7")
-  sampleEndCol <<- tclVar("20")
-  mzCol <<- tclVar("3")
-  RTCol <<- tclVar("2")
-  classIDCol <<- tclVar("21")
-  adductIDCol <<- tclVar("22")
-  numericDataStart_row <<- tclVar("3")
-  sampleGrouping_row <<- tclVar("2")
+  #### GUI starts here ###############################################################################
+  if("tcltk2" %in% rownames(installed.packages()) == FALSE) {install.packages("tcltk2")}
+  library(tcltk2)
+  
+  wd <- tk_choose.dir(default = "", caption = "Select directory")
+  setwd(wd)
+  done <- tclVar(0)
+  
+  numAdducts <- NULL
+  numValues <- NULL
+  rt_tolerance <- NULL
+  mz_tolerance <- NULL
+  featureTable_loc <- NULL
+  intStd_loc <- NULL
+  output <- NULL
+  
+  RTCol <- NULL
+  mzCol <- NULL
+  sampleStartCol <- NULL
+  sampleEndCol <- NULL
+  classIDCol <- NULL
+  adductIDCol <- NULL
+  numericDataStart_row <- NULL
+  sampleGrouping_row <- NULL
+  normalizeByWeights <- NULL
+  
+  weights_col <-NULL
+  
+  GUILauncher <- function() {
+    
+    output <<- tclVar("Default Output Folder")
+    mz_tolerance <<- tclVar(".005")
+    rt_tolerance <<- tclVar(".15")
+    normalizeByWeights <<- tclVar("0")
+    
+    numAdducts <<- tclVar("5")
+    numValues <<- tclVar("18")
+    sampleStartCol <<- tclVar("7")
+    sampleEndCol <<- tclVar("20")
+    mzCol <<- tclVar("3")
+    RTCol <<- tclVar("2")
+    classIDCol <<- tclVar("21")
+    adductIDCol <<- tclVar("22")
+    numericDataStart_row <<- tclVar("3")
+    sampleGrouping_row <<- tclVar("2")
+  
+    tt <- tktoplevel()
+    tkwm.title(tt,"LipidMatchQuant Settings")
+    numValues.entry <- tkentry(tt, textvariable= numValues)
+    output.entry <- tkentry(tt, textvariable = output)
+    mz_tolerance.entry <- tkentry(tt, textvariable= mz_tolerance)
+    rt_tolerance.entry <- tkentry(tt, textvariable= rt_tolerance)
+    normalizeByWeights.entry <- tk2checkbutton(tt, text = "Normalize data (e.g. by weight or protein)")
+    
+    numAdducts.entry <- tkentry(tt, textvariable= numAdducts)
+    sampleStartCol.entry <- tkentry(tt, textvariable  = sampleStartCol)
+    sampleEndCol.entry <- tkentry(tt, textvariable = sampleEndCol)
+    mzCol.entry <- tkentry(tt, textvariable = mzCol)
+    RTCol.entry <- tkentry(tt, textvariable = RTCol)
+    classIDCol.entry <- tkentry(tt, textvariable = classIDCol)
+    adductIDCol.entry <- tkentry(tt, textvariable = adductIDCol)
+    numericDataStart_row.entry <- tkentry(tt, textvariable = numericDataStart_row)
+    sampleGrouping_row.entry <- tkentry(tt, textvariable = sampleGrouping_row)
+  
+    submit <- function() {
+      output <<- tclvalue(output)
+      mz_tolerance <<- as.numeric(tclvalue(mz_tolerance))
+      rt_tolerance <<- as.numeric(tclvalue(rt_tolerance))
+      normalizeByWeights <<- as.character(tclvalue(normalizeByWeights))
+      numAdducts <<- as.numeric(tclvalue(numAdducts))
+      # numValues <<- as.numeric(tclvalue(numValues))
+      sampleStartCol <<- as.numeric(tclvalue(sampleStartCol))
+      sampleEndCol <<- as.numeric(tclvalue(sampleEndCol))
+      mzCol <<- as.numeric(tclvalue(mzCol))
+      RTCol <<- as.numeric(tclvalue(RTCol))
+      classIDCol <<- as.numeric(tclvalue(classIDCol))
+      adductIDCol <<- as.numeric(tclvalue(adductIDCol))
+      numericDataStart_row <<- as.numeric(tclvalue(numericDataStart_row))
+      sampleGrouping_row <<- as.numeric(tclvalue(sampleGrouping_row))
+      tclvalue(done) <- 1
+      tkdestroy(tt)
+    }
+    submit.but <- tkbutton(tt, text="Run Quantification", command=submit)
+    
+    FT_loc <- function() {
+      featureTable_loc <<-tk_choose.files(default = "", caption = "Select Feature Table", multi = FALSE, filters = NULL, index = 1)
+    }
+    FT_loc.but <- tkbutton(tt, text="Select Feature Table", command = FT_loc)
+    
+    IS_loc <- function() {
+      intStd_loc <<- tk_choose.files(default = "", caption = "Select Internal Standard Table", multi = FALSE, filters = NULL, index = 1)
+    }
+    IS_loc.but <- tkbutton(tt, text="Select Internal Standard Table", command = IS_loc)
+    
+    tkgrid(tklabel(tt, text="Select Feature Table with button") , FT_loc.but)
+    tkgrid(tklabel(tt, text="Select IS Table with button") ,IS_loc.but)
+    tkgrid(tklabel(tt, text=""))
+    tkgrid(tklabel(tt, text="Output folder name (created automatically): "), output.entry)
+    tkgrid(tklabel(tt,text="m/z Tolerance:"), mz_tolerance.entry)
+    tkgrid(tklabel(tt,text="RT Tolerance:"), rt_tolerance.entry)
+    tkgrid(tklabel(tt, text=""))
+    tkgrid(tklabel(tt,text="Number of Adducts:"), numAdducts.entry)
+    tkgrid(tklabel(tt, text="Sample Start Column:"), sampleStartCol.entry)
+    tkgrid(tklabel(tt, text="Sample End Column:"), sampleEndCol.entry)
+    tkgrid(tklabel(tt, text="m/z Column:"), mzCol.entry)
+    tkgrid(tklabel(tt, text="RT Column:"), RTCol.entry)
+    tkgrid(tklabel(tt, text="Class ID Column:"), classIDCol.entry)
+    tkgrid(tklabel(tt, text="Adduct ID Column:"), adductIDCol.entry)
+    tkgrid(tklabel(tt, text="Numeric Data Start Row:"), numericDataStart_row.entry)
+    tkgrid(tklabel(tt, text="Sample Grouping Row:"), sampleGrouping_row.entry)
+    tkgrid(tklabel(tt, text=""))
+    tkgrid(submit.but, pady = 8, columnspan=2)
+  }
+  
+  GUILauncher()
+  tkwait.variable(done)
+  if( !dir.exists(output)) {
+    dir.create(output)
+  }
 
-  tt <- tktoplevel()
-  tkwm.title(tt,"LipidMatchQuant Settings")
-  numValues.entry <- tkentry(tt, textvariable= numValues)
-  output.entry <- tkentry(tt, textvariable = output)
-  mz_tolerance.entry <- tkentry(tt, textvariable= mz_tolerance)
-  rt_tolerance.entry <- tkentry(tt, textvariable= rt_tolerance)
-  normalizeByWeights.entry <- tk2checkbutton(tt, text = "Normalize data (e.g. by weight or protein)")
-  
-  numAdducts.entry <- tkentry(tt, textvariable= numAdducts)
-  sampleStartCol.entry <- tkentry(tt, textvariable  = sampleStartCol)
-  sampleEndCol.entry <- tkentry(tt, textvariable = sampleEndCol)
-  mzCol.entry <- tkentry(tt, textvariable = mzCol)
-  RTCol.entry <- tkentry(tt, textvariable = RTCol)
-  classIDCol.entry <- tkentry(tt, textvariable = classIDCol)
-  adductIDCol.entry <- tkentry(tt, textvariable = adductIDCol)
-  numericDataStart_row.entry <- tkentry(tt, textvariable = numericDataStart_row)
-  sampleGrouping_row.entry <- tkentry(tt, textvariable = sampleGrouping_row)
-
-  submit <- function() {
-    output <<- tclvalue(output)
-    mz_tolerance <<- as.numeric(tclvalue(mz_tolerance))
-    rt_tolerance <<- as.numeric(tclvalue(rt_tolerance))
-    normalizeByWeights <<- as.character(tclvalue(normalizeByWeights))
-    numAdducts <<- as.numeric(tclvalue(numAdducts))
-    numValues <<- as.numeric(tclvalue(numValues))
-    sampleStartCol <<- as.numeric(tclvalue(sampleStartCol))
-    sampleEndCol <<- as.numeric(tclvalue(sampleEndCol))
-    mzCol <<- as.numeric(tclvalue(mzCol))
-    RTCol <<- as.numeric(tclvalue(RTCol))
-    classIDCol <<- as.numeric(tclvalue(classIDCol))
-    adductIDCol <<- as.numeric(tclvalue(adductIDCol))
-    numericDataStart_row <<- as.numeric(tclvalue(numericDataStart_row))
-    sampleGrouping_row <<- as.numeric(tclvalue(sampleGrouping_row))
-    tclvalue(done) <- 1
-    tkdestroy(tt)
-  }
-  submit.but <- tkbutton(tt, text="Run Quantification", command=submit)
-  
-  FT_loc <- function() {
-    featureTable_loc <<-tk_choose.files(default = "", caption = "Select Feature Table", multi = FALSE, filters = NULL, index = 1)
-  }
-  FT_loc.but <- tkbutton(tt, text="Select Feature Table", command = FT_loc)
-  
-  IS_loc <- function() {
-    intStd_loc <<- tk_choose.files(default = "", caption = "Select Internal Standard Table", multi = FALSE, filters = NULL, index = 1)
-  }
-  IS_loc.but <- tkbutton(tt, text="Select Internal Standard Table", command = IS_loc)
-  
-  tkgrid(tklabel(tt, text="Select Feature Table with button") , FT_loc.but)
-  tkgrid(tklabel(tt, text="Select IS Table with button") ,IS_loc.but)
-  tkgrid(tklabel(tt, text=""))
-  tkgrid(tklabel(tt, text="Output folder name (created automatically): "), output.entry)
-  tkgrid(tklabel(tt,text="m/z Tolerance:"), mz_tolerance.entry)
-  tkgrid(tklabel(tt,text="RT Tolerance:"), rt_tolerance.entry)
-  tkgrid(tklabel(tt, text=""))
-  tkgrid(tklabel(tt,text="Number of Adducts:"), numAdducts.entry)
-  tkgrid(tklabel(tt, text="Sample Start Column:"), sampleStartCol.entry)
-  tkgrid(tklabel(tt, text="Sample End Column:"), sampleEndCol.entry)
-  tkgrid(tklabel(tt, text="m/z Column:"), mzCol.entry)
-  tkgrid(tklabel(tt, text="RT Column:"), RTCol.entry)
-  tkgrid(tklabel(tt, text="Class ID Column:"), classIDCol.entry)
-  tkgrid(tklabel(tt, text="Adduct ID Column:"), adductIDCol.entry)
-  tkgrid(tklabel(tt, text="Numeric Data Start Row:"), numericDataStart_row.entry)
-  tkgrid(tklabel(tt, text="Sample Grouping Row:"), sampleGrouping_row.entry)
-  tkgrid(tklabel(tt, text=""))
-  tkgrid(submit.but, pady = 8, columnspan=2)
 }
-
-GUILauncher()
-tkwait.variable(done)
-if( !dir.exists(output)) {
-  dir.create(output)
-}
-
 ##### GUI ends here ###########################################################################
 
 # Data import and cleaning

@@ -1,0 +1,15 @@
+LMQ_Settings,Value,Notes
+numAdducts,1,blah
+rt_tolerance,2,blah
+mz_tolerance,3,blah
+featureTable_loc,4,blah
+intStd_loc,5,blah
+output,6,blah
+RTCol,7,blah
+mzCol,8,blah
+sampleStartCol,9,blah
+sampleEndCol,10,blah
+classIDCol,11,blah
+adductIDCol,12,blah
+numericDataStart_row,13,blah
+sampleGrouping_row,14,blah
