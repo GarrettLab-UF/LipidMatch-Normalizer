@@ -5,7 +5,8 @@
 
 rm( list = ls() )
 
-args = commandArgs(trailingOnly=TRUE)
+# args = commandArgs(trailingOnly=TRUE)
+args = c("/Users/JasonCochran/Documents/research/LipidMatch-Quant/LMQ_settings.csv")
 
 numAdducts <- NULL
 numValues <- NULL
@@ -27,20 +28,20 @@ weights_col <-NULL
 
 if( length(args) == 1 ) {
   settings <-  as.matrix(read.csv(args[1], header = TRUE, stringsAsFactors = FALSE))
-  numAdducts <- settings[1,2]
-  rt_tolerance <- settings[2,2]
-  mz_tolerance <- settings[3,2]
+  numAdducts <-  as.numeric( settings[1,2] )
+  rt_tolerance <- as.numeric( settings[2,2] )
+  mz_tolerance <- as.numeric( settings[3,2] )
   featureTable_loc <- settings[4,2]
-  intStd_loc <- settings[5,2]
+  intStd_loc <- as.numeric( settings[5,2] )
   output <- settings[6,2]
-  RTCol <- settings[7,2]
-  mzCol <- settings[8,2]
-  sampleStartCol <- settings[9,2]
-  sampleEndCol <- settings[10,2]
-  classIDCol <- settings[11,2]
-  adductIDCol <- settings[12,2]
-  numericDataStart_row <- settings[13,2]
-  sampleGrouping_row <- settings[14,2]
+  RTCol <- as.numeric( settings[7,2] )
+  mzCol <- as.numeric( settings[8,2] )
+  sampleStartCol <- as.numeric( settings[9,2] )
+  sampleEndCol <- as.numeric( settings[10,2] )
+  classIDCol <- as.numeric( settings[11,2] )
+  adductIDCol <- as.numeric( settings[12,2] )
+  numericDataStart_row <- as.numeric( settings[13,2] )
+  sampleGrouping_row <- as.numeric( settings[14,2] )
   weights_col <-NULL
   
 } else {
