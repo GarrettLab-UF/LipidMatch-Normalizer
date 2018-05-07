@@ -6,8 +6,8 @@
 rm( list = ls() )
 
 # args = commandArgs(trailingOnly=TRUE)
+args = c("/Users/JasonCochran/Documents/research/LipidMatch-Quant/LMQ_settings.csv")
 # args = c("/Users/JasonCochran/Documents/research/LipidMatch-Quant/LMQ_settings.csv")
-args = c("/Users/JasonCochran/Documents/research/LipidMatch-Quant/LMQ_settings.csv", "test")
 
 numAdducts <- NULL
 numValues <- NULL
@@ -27,13 +27,15 @@ sampleGrouping_row <- NULL
 normalizeByWeights <- NULL
 weights_col <-NULL
 
+print(args)
+
 if( length(args) == 1 ) {
   settings <-  as.matrix(read.csv(args[1], header = TRUE, stringsAsFactors = FALSE))
   numAdducts <-  as.numeric( settings[1,2] )
   rt_tolerance <- as.numeric( settings[2,2] )
   mz_tolerance <- as.numeric( settings[3,2] )
   featureTable_loc <- as.character( settings[4,2] )
-  intStd_loc <- as.numeric( settings[5,2] )
+  intStd_loc <- as.character( settings[5,2] )
   output <- as.character( settings[6,2] )
   RTCol <- as.numeric( settings[7,2] )
   mzCol <- as.numeric( settings[8,2] )
@@ -44,6 +46,10 @@ if( length(args) == 1 ) {
   numericDataStart_row <- as.numeric( settings[13,2] )
   sampleGrouping_row <- as.numeric( settings[14,2] )
   weights_col <-NULL
+  
+  if( !dir.exists(output)) {
+    dir.create(output)
+  }
   
 } else {
   
