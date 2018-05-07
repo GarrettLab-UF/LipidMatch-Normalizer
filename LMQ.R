@@ -6,7 +6,8 @@
 rm( list = ls() )
 
 # args = commandArgs(trailingOnly=TRUE)
-args = c("/Users/JasonCochran/Documents/research/LipidMatch-Quant/LMQ_settings.csv")
+# args = c("/Users/JasonCochran/Documents/research/LipidMatch-Quant/LMQ_settings.csv")
+args = c("/Users/JasonCochran/Documents/research/LipidMatch-Quant/LMQ_settings.csv", "test")
 
 numAdducts <- NULL
 numValues <- NULL
@@ -31,9 +32,9 @@ if( length(args) == 1 ) {
   numAdducts <-  as.numeric( settings[1,2] )
   rt_tolerance <- as.numeric( settings[2,2] )
   mz_tolerance <- as.numeric( settings[3,2] )
-  featureTable_loc <- settings[4,2]
+  featureTable_loc <- as.character( settings[4,2] )
   intStd_loc <- as.numeric( settings[5,2] )
-  output <- settings[6,2]
+  output <- as.character( settings[6,2] )
   RTCol <- as.numeric( settings[7,2] )
   mzCol <- as.numeric( settings[8,2] )
   sampleStartCol <- as.numeric( settings[9,2] )
@@ -307,7 +308,8 @@ quantifier_multi_IS = function(class_sel) {
       # Determine what retention time ranges are associated with what standard available for that class (based on the adduct)
       # Order the curStandards table by RT...
       if(nrow(curStandards) != 1 ) {
-        curStandards <- curStandards[,order( as.numeric(curStandards[,2]) )]
+        # curStandards <- curStandards[,order( as.numeric(curStandards[,2]) )]
+        curStandards <- curStandards[ order( as.numeric(curStandards[,2]) ) , ]
       }
       # browser()
       RT_cutoffs <- matrix(data = NA, nrow = 1, ncol = ( nrow(curStandards) + 1) )
@@ -464,7 +466,9 @@ comparator = function(sel_group) {
       mzAvg <- mean(subset_sm[,mzCol])
       mzAvgFeature <- which( abs( as.numeric(curStandard[,mzCol])-mzAvg) == min(abs( as.numeric(curStandard[,mzCol])-mzAvg)) )
       curStandard <- curStandard[mzAvgFeature,]
-      apply(subset_sm, 1, quantifier, sel_IS = avgIntStd, curStandard = curStandard, score = 3 )
+      if( nrow(curStandard) != 0 ) {
+        apply(subset_sm, 1, quantifier, sel_IS = avgIntStd, curStandard = curStandard, score = 3 )
+      }
     }
   } else {
     # print("No matches identified lipids were found to quantify using our current standard.")
