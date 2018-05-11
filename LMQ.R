@@ -6,7 +6,7 @@
 rm( list = ls() )
 
 # args = commandArgs(trailingOnly=TRUE)
-args = c("/Users/JasonCochran/Documents/research/LipidMatch-Quant/LMQ_settings.csv")
+args = c("C:/Users/Jeremy/Desktop/Desktop/Instrumentation/Software/MSms/LipidMatch_Workflow/LMQ/2018_05_08_LMQ_Software/LMQ_settings.csv")
 # args = c("/Users/JasonCochran/Documents/research/LipidMatch-Quant/LMQ_settings.csv")
 
 numAdducts <- NULL
@@ -36,20 +36,19 @@ if( length(args) == 1 ) {
   mz_tolerance <- as.numeric( settings[3,2] )
   featureTable_loc <- as.character( settings[4,2] )
   intStd_loc <- as.character( settings[5,2] )
-  output <- as.character( settings[6,2] )
-  RTCol <- as.numeric( settings[7,2] )
-  mzCol <- as.numeric( settings[8,2] )
-  sampleStartCol <- as.numeric( settings[9,2] )
-  sampleEndCol <- as.numeric( settings[10,2] )
-  classIDCol <- as.numeric( settings[11,2] )
-  adductIDCol <- as.numeric( settings[12,2] )
-  numericDataStart_row <- as.numeric( settings[13,2] )
-  sampleGrouping_row <- as.numeric( settings[14,2] )
+  RTCol <- as.numeric( settings[6,2] )
+  mzCol <- as.numeric( settings[7,2] )
+  sampleStartCol <- as.numeric( settings[8,2] )
+  sampleEndCol <- as.numeric( settings[9,2] )
+  classIDCol <- as.numeric( settings[10,2] )
+  adductIDCol <- as.numeric( settings[11,2] )
+  numericDataStart_row <- as.numeric( settings[12,2] )
+  sampleGrouping_row <- as.numeric( settings[13,2] )
   weights_col <-NULL
   
-  if( !dir.exists(output)) {
-    dir.create(output)
-  }
+  # if( !dir.exists(output)) {
+  #   dir.create(output)
+  # }
   
 } else {
   
@@ -98,7 +97,7 @@ if( length(args) == 1 ) {
     adductIDCol <<- tclVar("22")
     numericDataStart_row <<- tclVar("3")
     sampleGrouping_row <<- tclVar("2")
-  
+    
     tt <- tktoplevel()
     tkwm.title(tt,"LipidMatchQuant Settings")
     numValues.entry <- tkentry(tt, textvariable= numValues)
@@ -116,7 +115,7 @@ if( length(args) == 1 ) {
     adductIDCol.entry <- tkentry(tt, textvariable = adductIDCol)
     numericDataStart_row.entry <- tkentry(tt, textvariable = numericDataStart_row)
     sampleGrouping_row.entry <- tkentry(tt, textvariable = sampleGrouping_row)
-  
+    
     submit <- function() {
       output <<- tclvalue(output)
       mz_tolerance <<- as.numeric(tclvalue(mz_tolerance))
@@ -172,23 +171,32 @@ if( length(args) == 1 ) {
   if( !dir.exists(output)) {
     dir.create(output)
   }
-
+  
 }
 ##### GUI ends here ###########################################################################
 
 # Data import and cleaning
-InternalStandard <- as.matrix( read.csv(basename(intStd_loc), header = F, stringsAsFactors = F) )
+InternalStandard <- as.matrix( read.csv(intStd_loc, header = F, stringsAsFactors = F) )
 # Weights will be used later...
 weights <- InternalStandard[2,]
 InternalStandard <- InternalStandard[-2,]
-titles <- as.matrix(read.csv(basename(intStd_loc), header = F, stringsAsFactors = F))[2,3:(2+numAdducts)]
+titles <- as.matrix(read.csv(intStd_loc, header = F, stringsAsFactors = F))[2,3:(2+numAdducts)]
 InternalStandard[1,3:(2+numAdducts)] <- titles
 titles <- InternalStandard[1,]
 InternalStandard <- as.data.frame(InternalStandard[-1,], col.names = names(titles), stringsAsFactors = F )
 colnames(InternalStandard) <- titles
 
-FeatureTable <- read.csv(basename(featureTable_loc), header = T, stringsAsFactors = F)
+FeatureTable <- read.csv(featureTable_loc, header = T, stringsAsFactors = F)
 grouping <- FeatureTable[sampleGrouping_row-1,]
+
+## Add an extra row of NAs if no first row (corrects bug)
+Two_Rows<-FALSE
+if (numericDataStart_row == 2 ) {
+  EmptyRow<-rep(NA,ncol(FeatureTable))
+  FeatureTable <- rbind(EmptyRow,FeatureTable)
+  numericDataStart_row<-3
+  Two_Rows<-TRUE
+}
 
 for(i in 2:(numericDataStart_row - 1) ) {
   FeatureTable <- FeatureTable[-1,]
@@ -247,7 +255,7 @@ rm(mz_tolerance, row, rt_tolerance, titles, FindStandards)
 #############################################
 
 # Make a table of just our matched Intd Standards to make quantifying easier
-write.table(matches, file = paste(output ,"standardsFound.csv", sep = "/"), sep = ",", col.names = TRUE, row.names = FALSE)
+write.table(matches, file = paste(paste(substr(featureTable_loc,1,nchar(featureTable_loc)-4),"IS_Found.csv", sep = "_"), sep = "/"), sep = ",", col.names = TRUE, row.names = FALSE)
 
 # Setup a dataframe to store all the classes we need
 quantClasses <- as.list( strsplit( as.character( InternalStandard$Classes), split = " " ) )
@@ -379,7 +387,7 @@ rm( quantifier_actual)
 #############################################
 # Quantify anything that we didn't find a int std for but that we identified
 ############### PART 4 ##################
-  
+
 unQuantified <- quantifiedAmounts[ quantifiedAmounts$isQuantified == 0, ]
 unQuantified[,classIDCol][unQuantified[,classIDCol] == ""] <- NA
 unQuantified[,adductIDCol][unQuantified[,adductIDCol] == ""] <- NA
@@ -492,12 +500,21 @@ for(i in sampleStartCol:sampleEndCol) {
 
 quantifiedAmounts <- rbind(experimentalDesign, quantifiedAmounts)
 
-write.table(quantifiedAmounts, file = paste(output, paste(substr(basename(featureTable_loc),1,nchar(basename(featureTable_loc))-4),"Quant.csv", sep = "_"), sep = "/"), sep = ",", col.names = TRUE, row.names = FALSE)
-temp <- subset(quantifiedAmounts, quantifiedAmounts$isQuantified == 2 || quantifiedAmounts$isQuantified == 3)
-print(paste("Quantified with score of 1: ", nrow(temp_init), sep = "" ) )
-print(paste("Quantified with score of 2 or 3: ", nrow(temp), sep = "" ) )
+if(Two_Rows==TRUE){
+  quantifiedAmounts<-quantifiedAmounts[-1,]
+}
+
+write.table(quantifiedAmounts, file = paste(paste(substr(featureTable_loc,1,nchar(featureTable_loc)-4),"Quant.csv", sep = "_"), sep = "/"), sep = ",", col.names = TRUE, row.names = FALSE)
+# temp <- subset(quantifiedAmounts, quantifiedAmounts$isQuantified == 2 || quantifiedAmounts$isQuantified == 3)
+# print(paste("Quantified with score of 1: ", nrow(temp_init), sep = "" ) )
+# print(paste("Quantified with score of 2 or 3: ", nrow(temp), sep = "" ) )
 
 grouping <- quantifiedAmounts[1,]
 quantifiedAmounts <- quantifiedAmounts[-1,]
+quantified_scores<-as.numeric(as.character(quantifiedAmounts[,14]))
+Score1<-length(quantified_scores[grep(1,quantified_scores)])
+Score23<-length(quantified_scores[grep(2,quantified_scores)])+length(quantified_scores[grep(3,quantified_scores)])
+print(paste("Quantified with score of 1 (Using an IS with a matching class and adduct): ", Score1, sep = "" ) )
+print(paste("Quantified with score of 2 or 3 (Using an IS where either class or adduct don't match): ", Score23, sep = "" ) )
 
 print("Quantification is complete")
