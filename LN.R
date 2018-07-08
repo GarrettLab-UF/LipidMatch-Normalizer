@@ -1,13 +1,16 @@
 #########################################################
-# LipidMatch Quant                                      #
+# LipidNormalizer                                       #
 # Authors: Jason Cochran, Jeremy Koelmel                #
 #########################################################
 
 rm( list = ls() )
 
+# comment below for csv input
 # args = commandArgs(trailingOnly=TRUE)
-args = c("C:/Users/Jeremy/Desktop/Desktop/Instrumentation/Software/MSms/LipidMatch_Workflow/LMQ/2018_05_08_LMQ_Software/LMQ_settings.csv")
-# args = c("/Users/JasonCochran/Documents/research/LipidMatch-Quant/LMQ_settings.csv")
+# uncomment below for csv input
+# args = c("C:/Users/Jeremy/Desktop/Desktop/Instrumentation/Software/MSms/LipidMatch_Workflow/LMQ/2018_05_08_LMQ_Software/LMQ_settings.csv")
+# args = c("/Users/JasonCochran/Documents/research/LipidMatch-Normalizer/LMQ_settings.csv")
+args = c("/Users/JasonCochran/Documents/research/Jeremy_broke_LN/LMQ_settings.csv")
 
 numAdducts <- NULL
 numValues <- NULL
@@ -15,7 +18,7 @@ rt_tolerance <- NULL
 mz_tolerance <- NULL
 featureTable_loc <- NULL
 intStd_loc <- NULL
-output <- NULL
+#output <- NULL
 RTCol <- NULL
 mzCol <- NULL
 sampleStartCol <- NULL
@@ -66,7 +69,7 @@ if( length(args) == 1 ) {
   mz_tolerance <- NULL
   featureTable_loc <- NULL
   intStd_loc <- NULL
-  output <- NULL
+#  output <- NULL
   
   RTCol <- NULL
   mzCol <- NULL
@@ -82,7 +85,7 @@ if( length(args) == 1 ) {
   
   GUILauncher <- function() {
     
-    output <<- tclVar("Default Output Folder")
+    # output <<- tclVar("Default Output Folder")
     mz_tolerance <<- tclVar(".005")
     rt_tolerance <<- tclVar(".15")
     normalizeByWeights <<- tclVar("0")
@@ -99,9 +102,9 @@ if( length(args) == 1 ) {
     sampleGrouping_row <<- tclVar("2")
     
     tt <- tktoplevel()
-    tkwm.title(tt,"LipidMatchQuant Settings")
+    tkwm.title(tt,"LipidNormalizer Settings")
     numValues.entry <- tkentry(tt, textvariable= numValues)
-    output.entry <- tkentry(tt, textvariable = output)
+    # output.entry <- tkentry(tt, textvariable = output)
     mz_tolerance.entry <- tkentry(tt, textvariable= mz_tolerance)
     rt_tolerance.entry <- tkentry(tt, textvariable= rt_tolerance)
     normalizeByWeights.entry <- tk2checkbutton(tt, text = "Normalize data (e.g. by weight or protein)")
@@ -117,7 +120,7 @@ if( length(args) == 1 ) {
     sampleGrouping_row.entry <- tkentry(tt, textvariable = sampleGrouping_row)
     
     submit <- function() {
-      output <<- tclvalue(output)
+      # output <<- tclvalue(output)
       mz_tolerance <<- as.numeric(tclvalue(mz_tolerance))
       rt_tolerance <<- as.numeric(tclvalue(rt_tolerance))
       normalizeByWeights <<- as.character(tclvalue(normalizeByWeights))
@@ -134,7 +137,7 @@ if( length(args) == 1 ) {
       tclvalue(done) <- 1
       tkdestroy(tt)
     }
-    submit.but <- tkbutton(tt, text="Run Quantification", command=submit)
+    submit.but <- tkbutton(tt, text="Run Normalization", command=submit)
     
     FT_loc <- function() {
       featureTable_loc <<-tk_choose.files(default = "", caption = "Select Feature Table", multi = FALSE, filters = NULL, index = 1)
@@ -149,7 +152,7 @@ if( length(args) == 1 ) {
     tkgrid(tklabel(tt, text="Select Feature Table with button") , FT_loc.but)
     tkgrid(tklabel(tt, text="Select IS Table with button") ,IS_loc.but)
     tkgrid(tklabel(tt, text=""))
-    tkgrid(tklabel(tt, text="Output folder name (created automatically): "), output.entry)
+    # tkgrid(tklabel(tt, text="Output folder name (created automatically): "), output.entry)
     tkgrid(tklabel(tt,text="m/z Tolerance:"), mz_tolerance.entry)
     tkgrid(tklabel(tt,text="RT Tolerance:"), rt_tolerance.entry)
     tkgrid(tklabel(tt, text=""))
@@ -168,9 +171,9 @@ if( length(args) == 1 ) {
   
   GUILauncher()
   tkwait.variable(done)
-  if( !dir.exists(output)) {
-    dir.create(output)
-  }
+  #if( !dir.exists(output)) {
+  #  dir.create(output)
+  #}
   
 }
 ##### GUI ends here ###########################################################################
@@ -504,7 +507,7 @@ if(Two_Rows==TRUE){
   quantifiedAmounts<-quantifiedAmounts[-1,]
 }
 
-write.table(quantifiedAmounts, file = paste(paste(substr(featureTable_loc,1,nchar(featureTable_loc)-4),"Quant.csv", sep = "_"), sep = "/"), sep = ",", col.names = TRUE, row.names = FALSE)
+write.table(quantifiedAmounts, file = paste(paste(substr(featureTable_loc,1,nchar(featureTable_loc)-4),"Normalized.csv", sep = "_"), sep = "/"), sep = ",", col.names = TRUE, row.names = FALSE)
 # temp <- subset(quantifiedAmounts, quantifiedAmounts$isQuantified == 2 || quantifiedAmounts$isQuantified == 3)
 # print(paste("Quantified with score of 1: ", nrow(temp_init), sep = "" ) )
 # print(paste("Quantified with score of 2 or 3: ", nrow(temp), sep = "" ) )
@@ -514,7 +517,7 @@ quantifiedAmounts <- quantifiedAmounts[-1,]
 quantified_scores<-as.numeric(as.character(quantifiedAmounts[,14]))
 Score1<-length(quantified_scores[grep(1,quantified_scores)])
 Score23<-length(quantified_scores[grep(2,quantified_scores)])+length(quantified_scores[grep(3,quantified_scores)])
-print(paste("Quantified with score of 1 (Using an IS with a matching class and adduct): ", Score1, sep = "" ) )
-print(paste("Quantified with score of 2 or 3 (Using an IS where either class or adduct don't match): ", Score23, sep = "" ) )
+print(paste("Normalized with score of 1 (Using an IS with a matching class and adduct): ", Score1, sep = "" ) )
+print(paste("Normalized with score of 2 or 3 (Using an IS where either class or adduct don't match): ", Score23, sep = "" ) )
 
-print("Quantification is complete")
+print("Normalization is complete")
