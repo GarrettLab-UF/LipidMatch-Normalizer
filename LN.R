@@ -265,12 +265,12 @@ invisible( apply(InternalStandard, 1, FindStandards) )
 
 rm(mz_tolerance, row, rt_tolerance, titles, FindStandards)
 
+# Make a table of just our matched Intd Standards to make quantifying easier
+write.table(matches, file = paste(paste(substr(featureTable_loc,1,nchar(featureTable_loc)-4),"IS_Found.csv", sep = "_"), sep = "/"), sep = ",", col.names = TRUE, row.names = FALSE)
+
 #############################################
 ############### PART 2 & 3 ##################
 #############################################
-
-# Make a table of just our matched Intd Standards to make quantifying easier
-write.table(matches, file = paste(paste(substr(featureTable_loc,1,nchar(featureTable_loc)-4),"IS_Found.csv", sep = "_"), sep = "/"), sep = ",", col.names = TRUE, row.names = FALSE)
 
 # Setup a dataframe to store all the classes we need
 quantClasses <- as.list( strsplit( as.character( InternalStandard$Classes), split = " " ) )
@@ -505,7 +505,7 @@ comparator = function(sel_group) {
       mzAvg <- mean(subset_sm[,mzCol])
       mzAvgFeature <- which( abs( as.numeric(curStandard[,mzCol])-mzAvg) == min(abs( as.numeric(curStandard[,mzCol])-mzAvg)) )
       curStandard <- curStandard[mzAvgFeature,]
-      browser()
+      #browser()
       if( nrow(curStandard) != 0 ) {
         apply(subset_sm, 1, quantifier, sel_IS = avgIntStd, curStandard = curStandard, score = 3 )
       }
