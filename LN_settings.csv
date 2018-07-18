@@ -1,15 +1,14 @@
 LMQ_Settings,Value,Notes
-numAdducts,3,blah
-rt_tolerance,0.15,blah
-mz_tolerance,0.005,blah
-featureTable_loc,/Users/JasonCochran/Documents/research/LipidMatch-Quant/PosIDed.csv,blah
-intStd_loc,/Users/JasonCochran/Documents/research/LipidMatch-Quant/Lipid_Std_Pos.csv,blah
-output,blahOutput,blah
-RTCol,3,blah
-mzCol,2,blah
-sampleStartCol,4,blah
-sampleEndCol,53,blah
-classIDCol,57,blah
-adductIDCol,58,blah
-numericDataStart_row,3,blah
-sampleGrouping_row,2,blah
+numAdducts,5,number of adducts in your internal standards table (number of columns with adduct headers)
+rt_tolerance,0.15,"retention time tolerance for matching internal standards from the table you made, to internal standards in the feature table (window, 0.1 min = + or - 0.05 min) "
+mz_tolerance,0.005,"mass to charge tolerance for matching internal standards from the table you made, to internal standards in the feature table (+ or - 0.005, for 0.005, for example)"
+featureTable_loc,C:/Users/Jeremy/Desktop/Desktop/Instrumentation/Software/MSms/LipidMatch_Workflow/LipidMatch_Normalizer/Quant_Examples/NIST_1950/Feature_Table_Neg_Area.csv,"Directory: Make sure to use forward slashes ""/"""
+intStd_loc,C:/Users/Jeremy/Desktop/Desktop/Instrumentation/Software/MSms/LipidMatch_Workflow/LipidMatch_Normalizer/Quant_Examples/NIST_1950/IS_Table.csv,"Directory: Make sure to use forward slashes ""/"""
+RTCol,4,Feature table: column of retention times
+mzCol,3,Feature table: column of m/z values
+sampleStartCol,6,Feature table: column where the first sample header is
+sampleEndCol,8,Feature table: column where the last sample header is (make sure all samples are adjacent with no other columns embetween)
+classIDCol,11,Feature table: column of lipid classes
+adductIDCol,12,Feature table: column of lipid adducts
+numericDataStart_row,2,"row where your peak areas or heights would begin (as well as m/z values, retention time values, etc.)"
+sampleGrouping_row,2,"Not in use, put any number"

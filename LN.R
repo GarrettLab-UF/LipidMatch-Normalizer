@@ -10,7 +10,7 @@ rm( list = ls() )
 # uncomment below for csv input
 # args = c("C:/Users/Jeremy/Desktop/Desktop/Instrumentation/Software/MSms/LipidMatch_Workflow/LMQ/2018_05_08_LMQ_Software/LMQ_settings.csv")
 # args = c("/Users/JasonCochran/Documents/research/LipidMatch-Normalizer/LMQ_settings.csv")
-args = c("/Users/JasonCochran/Documents/research/Jeremy_broke_LN/LMQ_settings.csv")
+args = c("C:/Users/Jeremy/Desktop/Desktop/Instrumentation/Software/MSms/LipidMatch_Workflow/LipidMatch_Normalizer/2018_07_18_LMN_Software/LMN_settings.csv")
 
 numAdducts <- NULL
 numValues <- NULL
@@ -191,6 +191,18 @@ colnames(InternalStandard) <- titles
 
 FeatureTable <- read.csv(featureTable_loc, header = T, stringsAsFactors = F)
 grouping <- FeatureTable[sampleGrouping_row-1,]
+
+## Add an extra column for identifiers
+FeatureTable<-cbind(TempID = 1:nrow(FeatureTable),FeatureTable)
+
+## JPK: After adding an extra column to the left, 
+## I moved over all the user input parameters for feature columns by 1
+RTCol <- RTCol+1
+mzCol <- mzCol+1
+sampleStartCol <- sampleStartCol+1
+sampleEndCol <- sampleEndCol+1
+classIDCol <- classIDCol+1
+adductIDCol <- adductIDCol+1
 
 ## Add an extra row of NAs if no first row (corrects bug)
 Two_Rows<-FALSE
@@ -507,6 +519,9 @@ if(Two_Rows==TRUE){
   quantifiedAmounts<-quantifiedAmounts[-1,]
 }
 
+##Remove extra column for tracking features
+quantifiedAmounts<-quantifiedAmounts[,2:ncol(quantifiedAmounts)]
+
 write.table(quantifiedAmounts, file = paste(paste(substr(featureTable_loc,1,nchar(featureTable_loc)-4),"Normalized.csv", sep = "_"), sep = "/"), sep = ",", col.names = TRUE, row.names = FALSE)
 # temp <- subset(quantifiedAmounts, quantifiedAmounts$isQuantified == 2 || quantifiedAmounts$isQuantified == 3)
 # print(paste("Quantified with score of 1: ", nrow(temp_init), sep = "" ) )
@@ -514,7 +529,8 @@ write.table(quantifiedAmounts, file = paste(paste(substr(featureTable_loc,1,ncha
 
 grouping <- quantifiedAmounts[1,]
 quantifiedAmounts <- quantifiedAmounts[-1,]
-quantified_scores<-as.numeric(as.character(quantifiedAmounts[,14]))
+## JPK: Edited to make the column of quantified amounts variable depending on user input (you had as "14")
+quantified_scores<-as.numeric(as.character(quantifiedAmounts[,adductIDCol+1]))
 Score1<-length(quantified_scores[grep(1,quantified_scores)])
 Score23<-length(quantified_scores[grep(2,quantified_scores)])+length(quantified_scores[grep(3,quantified_scores)])
 print(paste("Normalized with score of 1 (Using an IS with a matching class and adduct): ", Score1, sep = "" ) )
