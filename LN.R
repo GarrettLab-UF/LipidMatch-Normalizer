@@ -6,11 +6,9 @@
 rm( list = ls() )
 
 # comment below for csv input
-# args = commandArgs(trailingOnly=TRUE)
+args = commandArgs(trailingOnly=TRUE)
 # uncomment below for csv input
-# args = c("C:/Users/Jeremy/Desktop/Desktop/Instrumentation/Software/MSms/LipidMatch_Workflow/LMQ/2018_05_08_LMQ_Software/LMQ_settings.csv")
-# args = c("/Users/JasonCochran/Documents/research/LipidMatch-Normalizer/LMQ_settings.csv")
-args = c("C:/Users/Jeremy/Desktop/Desktop/Instrumentation/Software/MSms/LipidMatch_Workflow/LipidMatch_Normalizer/2018_07_18_LMN_Software/LN_settings.csv")
+# args = c("C:/Users/Jeremy/Desktop/Desktop/Instrumentation/Software/MSms/LipidMatch_Workflow/LipidMatch_Normalizer/2018_07_18_LMN_Software/LN_settings.csv")
 
 numAdducts <- NULL
 numValues <- NULL
