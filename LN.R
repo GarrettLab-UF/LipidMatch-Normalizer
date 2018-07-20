@@ -6,11 +6,9 @@
 rm( list = ls() )
 
 # comment below for csv input
-# args = commandArgs(trailingOnly=TRUE)
+args = commandArgs(trailingOnly=TRUE)
 # uncomment below for csv input
-# args = c("C:/Users/Jeremy/Desktop/Desktop/Instrumentation/Software/MSms/LipidMatch_Workflow/LMQ/2018_05_08_LMQ_Software/LMQ_settings.csv")
-# args = c("/Users/JasonCochran/Documents/research/LipidMatch-Normalizer/LMQ_settings.csv")
-args = c("C:/Users/Jeremy/Desktop/Desktop/Instrumentation/Software/MSms/LipidMatch_Workflow/LipidMatch_Normalizer/2018_07_18_LMN_Software/LMN_settings.csv")
+# args = c("C:/Users/Jeremy/Desktop/Desktop/Instrumentation/Software/MSms/LipidMatch_Workflow/LipidMatch_Normalizer/2018_07_18_LMN_Software/LN_settings.csv")
 
 numAdducts <- NULL
 numValues <- NULL
@@ -265,12 +263,12 @@ invisible( apply(InternalStandard, 1, FindStandards) )
 
 rm(mz_tolerance, row, rt_tolerance, titles, FindStandards)
 
+# Make a table of just our matched Intd Standards to make quantifying easier
+write.table(matches, file = paste(paste(substr(featureTable_loc,1,nchar(featureTable_loc)-4),"IS_Found.csv", sep = "_"), sep = "/"), sep = ",", col.names = TRUE, row.names = FALSE)
+
 #############################################
 ############### PART 2 & 3 ##################
 #############################################
-
-# Make a table of just our matched Intd Standards to make quantifying easier
-write.table(matches, file = paste(paste(substr(featureTable_loc,1,nchar(featureTable_loc)-4),"IS_Found.csv", sep = "_"), sep = "/"), sep = ",", col.names = TRUE, row.names = FALSE)
 
 # Setup a dataframe to store all the classes we need
 quantClasses <- as.list( strsplit( as.character( InternalStandard$Classes), split = " " ) )
@@ -486,21 +484,32 @@ comparator = function(sel_group) {
         apply(subset_sm, 1, quantifier, sel_IS = avgIntStd, curStandard = curStandard, score = 2 )
       }
     } else {
-      subset_classes <- classes
-      avgIntStd <- which( abs( as.numeric(subset_classes$RT)-avgRT) == min(abs( as.numeric(subset_classes$RT)-avgRT)) )
-      avgIntStd <- subset_classes[avgIntStd,]
+      avgIntStd <- which( abs( as.numeric(classes$RT)-avgRT) == min(abs( as.numeric(classes$RT)-avgRT)) )
+      avgIntStd <- classes[avgIntStd,]
+      if (grepl("].+",sel_group[2])) {
+        PosFeature<-TRUE
+      } else {
+        PosFeature<-FALSE    
+      }
+      if (PosFeature==TRUE) {
+        matches_subset<-matches[grep("].+",matches[,ncol(matches)]),]
+      }
+      if (PosFeature==FALSE) {
+        matches_subset<-matches[grep("].-",matches[,ncol(matches)]),]
+      }
       curStandard <- which( matches$matchClass == avgIntStd[,1]  )
       curStandard <- matches[curStandard,]
       # Need to refine selection of curStandard to account for m/z average
       mzAvg <- mean(subset_sm[,mzCol])
       mzAvgFeature <- which( abs( as.numeric(curStandard[,mzCol])-mzAvg) == min(abs( as.numeric(curStandard[,mzCol])-mzAvg)) )
       curStandard <- curStandard[mzAvgFeature,]
+      #browser()
       if( nrow(curStandard) != 0 ) {
         apply(subset_sm, 1, quantifier, sel_IS = avgIntStd, curStandard = curStandard, score = 3 )
       }
     }
   } else {
-    # print("No matches identified lipids were found to quantify using our current standard.")
+    #print("No matches identified lipids were found to quantify using our current standard.")
   }
 }
 
